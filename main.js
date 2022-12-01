@@ -4,7 +4,7 @@ const fs = require("fs");
 const ReplayParser = require("@kokomi/w3g-parser").default
 const ActionParser = require("@kokomi/w3g-parser").ActionParser;
 
-const file = fs.readFileSync(path.resolve(__dirname, './src/4444.w3g'));
+const file = fs.readFileSync(path.resolve(__dirname, './src/2222.w3g'));
 
 
 let asuna = new ReplayParser();
@@ -74,7 +74,6 @@ actions.forEach((i) => {
       j.actions[0].filename === "MMD.Dat"
     ){
 
-
       j.actions.forEach((y) => {
 
         if (y.missionKey){
@@ -133,23 +132,10 @@ actions.forEach((i) => {
               }
 
             }
-
-
-
-
-
           }
         }
-
-
-
-
       })
-
-
-
     }
-
   })
 })
 
