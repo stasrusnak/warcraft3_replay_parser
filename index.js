@@ -38,7 +38,7 @@ let link = 'GHost++_2022-05-30_00-23_LegionTD_x20_-prссah_+4_(47m47s).w3g\n'
 let query = `INSERT INTO REPS (date, time, idrep, link)
                      VALUES ('${date}', '${time}', '${idrep}', '${link}')`;
 
-connection.query(query, function (err, result, fields) {
+connection.query(query, function (err, result) {
   // if any error while executing above query, throw error
   if (err) throw err;
   // if there is no error, you have the result
