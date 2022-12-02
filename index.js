@@ -30,10 +30,10 @@ connection.connect((err) => {
 let date = '2022-05-30_00-23'
 let time = '47m47s'
 let idrep = '4'
-let link = 'GHost++_2022-05-30_00-23_LegionTD_x20_-prссah_+4_(47m47s).w3g\n'
+let link = 'GHost++_2022-05-30_00-23_LegionTD_x20_-prссah_+4_(47m47s).w3g'
 
 
-
+// date = date.replace(/_/g, ' ')
 
 let query = `INSERT INTO REPS (date, time, idrep, link)
                      VALUES ('${date}', '${time}', '${idrep}', '${link}')`;
