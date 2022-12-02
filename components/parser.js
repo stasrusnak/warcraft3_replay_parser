@@ -90,7 +90,10 @@ links.forEach(i=>{
   re = decodeURIComponent(re)
   linkBase.push(re)
 
-  // let parsLink =  re.match(/GHost\+\+_(.*?)_LegionTD_x20_-prссah_\+(.*?)_\((.*?)\).w3g/m);
+  let parsLink =  re.match(/GHost\+\+_(.*?)_LegionTD_x20_-prссah_\+(.*?)_\((.*?)\).w3g/m);
+
+
+  console.log(parsLink[0])
 
 console.log(parsLink[1])
 console.log(parsLink[2])
@@ -99,16 +102,16 @@ console.log(parsLink[3])
 
 })
 
-  fs.writeFile("./../src/links/old.json", JSON.stringify(linkBase), function(err) {
-    if(err) { //если возникла ошибка, выводим ее в консоль
-      return console.log(err);
-    }
-    console.log("links save");
-  });
+  // fs.writeFile("./../src/links/old.json", JSON.stringify(linkBase), function(err) {
+  //   if(err) { //если возникла ошибка, выводим ее в консоль
+  //     return console.log(err);
+  //   }
+  //   console.log("links save");
+  // });
+  //
 
 
-
-console.log(linkBase)
+// console.log(linkBase)
 
 
 // invoking the main function
