@@ -92,9 +92,9 @@ links.forEach(i=>{
 
   // let parsLink =  re.match(/GHost\+\+_(.*?)_LegionTD_x20_-prссah_\+(.*?)_\((.*?)\).w3g/m);
 
-// console.log(parsLink[1])
-// console.log(parsLink[2])
-// console.log(parsLink[3])
+console.log(parsLink[1])
+console.log(parsLink[2])
+console.log(parsLink[3])
   // linkBase.push(parsLink)
 
 })

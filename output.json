@@ -1,0 +1,25 @@
+{
+  "playerToName": {
+    "0": "-HakypuJlo-",
+    "1": "putch93",
+    "2": "Zer0id228",
+    "3": "humorist8",
+    "4": "YooMaYoo",
+    "5": "romanuk2020",
+    "6": "BetterThatYou",
+    "7": "Alaster"
+  },
+  "leavers": {
+    "2": true
+  },
+  "flags": {
+    "0": "loser",
+    "1": "loser",
+    "2": "loser",
+    "3": "loser",
+    "4": "winner",
+    "5": "winner",
+    "6": "winner",
+    "7": "winner"
+  }
+}
