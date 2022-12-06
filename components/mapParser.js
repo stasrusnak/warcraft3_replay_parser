@@ -12,6 +12,7 @@ const Maps = require('../models/map.model');
 const links = require('../models/links.model');
 const User = require('../models/user.model');
 
+const compositeOpponent = require('glicko2-composite-opponent');
 const glicko2 = require('glicko2');
 
 const settings = {
@@ -30,36 +31,141 @@ var ranking = new glicko2.Glicko2(settings);
 var pc = ranking.makePlayer()
 var matches = [];
 
-let state = {};
+// let state = {};
 
-/*
+let state = {
+  "playerToName": {
+    "0": "-HakypuJlo-",
+    "1": "putch93",
+    "2": "Zer0id228",
+    "3": "humorist8",
+    "4": "YooMaYoo",
+  },
+  "leavers": {
+    "2": true
+  },
+  "flags": {
+    "0": "loser",
+    "1": "loser",
+    "2": "loser",
+    "3": "loser",
+    "4": "winner",
+  }
+}
+
+
 mongoose.connect(config.mongo_url, {
   useUnifiedTopology: true,
   useNewUrlParser: true,
 })
   .then(() => {
-    console.log("connect" );
+    console.log("connect");
     setTimeout(async () => {
       let link = await links.find({idrep: 595});
       console.log(link)
 
       let li = link[0]
 
+
       if (li.pars === 1) {
-        getReplays('https://replays.irinabot.ru/94545/' + li.link).then(() => {
+        //find players
+        let players = [];
+        for (let key in state.playerToName) {
+          let user = await User.findOne({nick: state.playerToName[key]});
+          if (!user) {
+            let user = new User({
+              nick: state.playerToName[key],
+              PTS: 1000,
+              prevPTS: 1000,
+              Games: 0,
+              wins: 0,
+              lose: 0,
+              leavers: 0,
+              idrep: 0,
+            })
+            user.save().then(() => {
+              console.log(state.playerToName[key] + ' create')
+            })
+            players.push(user)
+          } else {
+            players.push(user)
+          }
+        }
+
+        function getPlayers(nick) {
+          let pts = []
+          Object.keys(players).forEach((key) => {
+            if (players[key].nick === nick) pts = players[key]
+          })
+          return pts
+        }
+
+        function setPts() {
+          let pts = []
+          Object.keys(players).forEach((key) => {
+            if (players[key].nick === nick) pts = players[key].PTS
+          })
+          return pts
+        }
 
 
-          let res =  JSON.parse(JSON.stringify(state))
+        //calc pts
+        let wt = []
+        let lt = []
+        let winner = []
+        let loser = []
 
-          // res['playerToName'].forEach((key,value) =>{
-          //   console.log(key+' : '+value)
-          // })
-          console.log( res['playerToName'])
+        for (let key in state.playerToName) {
+          switch (state.flags[key]) {
+            case "winner" :
+              let plw = getPlayers(state.playerToName[key])
+              console.log(plw)
+              winner.push({
+                'nick':plw.nick,
+                'PTS':plw.PTS
+              })
+              wt.push(ranking.makePlayer(plw.PTS, 155, 0.05))
+              break
+            case "loser" :
+              let pll = getPlayers(state.playerToName[key])
+              loser.push({
+                'nick':pll.nick,
+                'PTS':pll.PTS
+              })
+              lt.push(ranking.makePlayer(pll.PTS, 155, 0.05))
+              break
+          }
+        }
 
-          // let user = {}
-          //
-          // console.log(state.playerToName.length)
-          //
+
+        // team wt defeats team lt
+        let matches = compositeOpponent(wt, lt, 1);
+        ranking.updateRatings(matches);
+
+
+        console.log(players)
+        console.log(winner)
+        console.log(loser)
+
+        //Доделать карты
+
+        wt[0] ?  console.log(winner[0].nick +'|'+Math.round(wt[0].getRating()) + '|'+winner[0].PTS )  : 1
+        wt[1] ?  console.log(winner[1].nick +'|'+Math.round(wt[1].getRating()) + '|'+winner[1].PTS )  : 1
+        wt[2] ?  console.log(winner[2].nick +'|'+Math.round(wt[2].getRating()) + '|'+winner[2].PTS )  : 1
+        wt[3] ?  console.log(winner[3].nick +'|'+Math.round(wt[3].getRating()) + '|'+winner[3].PTS )  : 1
+
+        lt[0] ?  console.log(loser[0].nick +'|'+Math.round(lt[0].getRating()) + '|'+loser[0].PTS )  : 1
+        lt[1] ?  console.log(loser[1].nick +'|'+Math.round(lt[1].getRating()) + '|'+loser[1].PTS )  : 1
+        lt[2] ?  console.log(loser[2].nick +'|'+Math.round(lt[2].getRating()) + '|'+loser[2].PTS )  : 1
+        lt[3] ?  console.log(loser[3].nick +'|'+Math.round(lt[3].getRating()) + '|'+loser[3].PTS )  : 1
+
+
+
+        /*
+        getReplays('https://replays.irinabot.ru/94545/' + li.link).then(async () => {
+
+
+
           // Object.keys(state.playerToName).forEach((key,index) => {
           //
           //   console.log(state.playerToName[key])
@@ -93,7 +199,7 @@ mongoose.connect(config.mongo_url, {
           //                   'PTS': user['PTS'] ? user['PTS'] : pla.getRating(),
           //                   'prevPTS' : user['prevPTS'] ? user['prevPTS'] : pla.getRating()}
           //   console.log(user)
-
+          //
           // });
 
 
@@ -127,8 +233,9 @@ mongoose.connect(config.mongo_url, {
           console.log("save new map data : " );
 
         })
-      }
 
+        */
+      }
 
 
       // link.forEach(li => {
@@ -215,7 +322,7 @@ mongoose.connect(config.mongo_url, {
     }, 1000);
   })
   .catch(error => console.log('mongodb connected error! :' + error))
-*/
+
 
 const getRawData = (URL) => {
   return fetch(URL)
@@ -373,10 +480,13 @@ function getStats(file) {
 
 }
 
-var compositeOpponent = require('glicko2-composite-opponent');
+
+/**********
+
+ var compositeOpponent = require('glicko2-composite-opponent');
 
 
-getReplays('https://replays.irinabot.ru/94545/').then(() => {
+ getReplays('https://replays.irinabot.ru/94545/').then(() => {
 
   for (let key in state.playerToName) {
     let user = new User({
@@ -428,129 +538,129 @@ getReplays('https://replays.irinabot.ru/94545/').then(() => {
   console.log(vt[2].getRating())
   console.log(vt[3].getRating())
 
+ *************/
+
+/*
+  for (let key in state.playerToName) {
 
 
-  /*
-    for (let key in state.playerToName) {
+    user['nick'] = state.playerToName[key]
+    console.log(key)
+    console.log(state.playerToName[key])
+    var pla = ranking.makePlayer();
 
-
-      user['nick'] = state.playerToName[key]
-      console.log(key)
-      console.log(state.playerToName[key])
-      var pla = ranking.makePlayer();
-
-      if (state.flags){
-        switch (state.flags[key]) {
-          case "loser" :
-            user['loser'] = 1
-            user['prevPTS']= parseInt(pla.getRating())
-            matches.push([pla, pc, 0]);
-            ranking.updateRatings(matches);
-            user['PTS'] = parseInt(pla.getRating())
-            break
-          case "winner" :
-            user['winner'] = 1
-            user['prevPTS']= parseInt(pla.getRating())
-            matches.push([pla, pc, 1]);
-            ranking.updateRatings(matches);
-            user['PTS'] = parseInt(pla.getRating())
-            break
-        }
-      }else{
-        user['rmk'] = 1
-        user['prevPTS'] = parseInt(pla.getRating())
-        user['PTS'] = parseInt(pla.getRating())
+    if (state.flags){
+      switch (state.flags[key]) {
+        case "loser" :
+          user['loser'] = 1
+          user['prevPTS']= parseInt(pla.getRating())
+          matches.push([pla, pc, 0]);
+          ranking.updateRatings(matches);
+          user['PTS'] = parseInt(pla.getRating())
+          break
+        case "winner" :
+          user['winner'] = 1
+          user['prevPTS']= parseInt(pla.getRating())
+          matches.push([pla, pc, 1]);
+          ranking.updateRatings(matches);
+          user['PTS'] = parseInt(pla.getRating())
+          break
       }
-      if(state.leavers[key]) {
-        user['leaver'] = 1
-      }
-      user['Games']={idrep: 597,
-        'PTS': user['PTS'] ? user['PTS'] : pla.getRating(),
-        'prevPTS' : user['prevPTS'] ? user['prevPTS'] : pla.getRating()}
-      console.log(user)
-      user=[]
-      pla = []
-      ranking = []
-      matches = []
-
+    }else{
+      user['rmk'] = 1
+      user['prevPTS'] = parseInt(pla.getRating())
+      user['PTS'] = parseInt(pla.getRating())
     }
-  */
+    if(state.leavers[key]) {
+      user['leaver'] = 1
+    }
+    user['Games']={idrep: 597,
+      'PTS': user['PTS'] ? user['PTS'] : pla.getRating(),
+      'prevPTS' : user['prevPTS'] ? user['prevPTS'] : pla.getRating()}
+    console.log(user)
+    user=[]
+    pla = []
+    ranking = []
+    matches = []
 
-  // Object.keys(state.playerToName).forEach((key,index) => {
-  //
+  }
+*/
 
-  //
-  // });
+// Object.keys(state.playerToName).forEach((key,index) => {
+//
 
-
-  // let user = {}
-  //
-  // console.log(state.playerToName.length)
-  //
-  // Object.keys(state.playerToName).forEach((key,index) => {
-  //
-  //   console.log(state.playerToName[key])
-  //   user['nick'] = state.playerToName[key]
-  //   user['index'] = index
-  //   let pla = ranking.makePlayer();
-  //
-  //   if (state.flags){
-  //     switch (state.flags[key]) {
-  //       case "loser" :
-  //         user['loser'] = 1
-  //         user['prevPTS']= parseInt(pla.getRating())
-  //         matches.push([pla, pc, 0]);
-  //         ranking.updateRatings(matches);
-  //         user['PTS'] = parseInt(pla.getRating())
-  //         break
-  //       case "winner" :
-  //         user['winner'] = 1
-  //         user['prevPTS']= parseInt(pla.getRating())
-  //         matches.push([pla, pc, 1]);
-  //         ranking.updateRatings(matches);
-  //         user['PTS'] = parseInt(pla.getRating())
-  //         break
-  //     }
-  //   }
-  //   if(state.leavers) {
-  //     user['leaver']
-  //   }
-  //
-  //   user['Games']={idrep: li.idrep,
-  //                   'PTS': user['PTS'] ? user['PTS'] : pla.getRating(),
-  //                   'prevPTS' : user['prevPTS'] ? user['prevPTS'] : pla.getRating()}
-  //   console.log(user)
-
-  // });
+//
+// });
 
 
-  //
-  // const user = new User({
-  //   nick: state.playerToName[key],
-  //   PTS: {},
-  //   Games: {},
-  //   winRate: {},
-  //   wins: {},
-  //   lose: {},
-  //   date_insert: {},
-  //   idrep: {},
-  // })
+// let user = {}
+//
+// console.log(state.playerToName.length)
+//
+// Object.keys(state.playerToName).forEach((key,index) => {
+//
+//   console.log(state.playerToName[key])
+//   user['nick'] = state.playerToName[key]
+//   user['index'] = index
+//   let pla = ranking.makePlayer();
+//
+//   if (state.flags){
+//     switch (state.flags[key]) {
+//       case "loser" :
+//         user['loser'] = 1
+//         user['prevPTS']= parseInt(pla.getRating())
+//         matches.push([pla, pc, 0]);
+//         ranking.updateRatings(matches);
+//         user['PTS'] = parseInt(pla.getRating())
+//         break
+//       case "winner" :
+//         user['winner'] = 1
+//         user['prevPTS']= parseInt(pla.getRating())
+//         matches.push([pla, pc, 1]);
+//         ranking.updateRatings(matches);
+//         user['PTS'] = parseInt(pla.getRating())
+//         break
+//     }
+//   }
+//   if(state.leavers) {
+//     user['leaver']
+//   }
+//
+//   user['Games']={idrep: li.idrep,
+//                   'PTS': user['PTS'] ? user['PTS'] : pla.getRating(),
+//                   'prevPTS' : user['prevPTS'] ? user['prevPTS'] : pla.getRating()}
+//   console.log(user)
+
+// });
 
 
-  // let data = {
-  //   idrep: li.idrep,
-  //   pars: 1,
-  //   players: state.playerToName,
-  //   leavers: state.leavers,
-  //   flags: state.flags,
-  // }
+//
+// const user = new User({
+//   nick: state.playerToName[key],
+//   PTS: {},
+//   Games: {},
+//   winRate: {},
+//   wins: {},
+//   lose: {},
+//   date_insert: {},
+//   idrep: {},
+// })
 
-  // const map = new Maps(data)
-  // map.save()
-  //   .then(()=>{
-  //     li.pars = 1
-  //     li.save()
-  //   })
-  console.log("save new map data : ");
 
-})
+// let data = {
+//   idrep: li.idrep,
+//   pars: 1,
+//   players: state.playerToName,
+//   leavers: state.leavers,
+//   flags: state.flags,
+// }
+
+// const map = new Maps(data)
+// map.save()
+//   .then(()=>{
+//     li.pars = 1
+//     li.save()
+//   })
+//   console.log("save new map data : ");
+//
+// })
