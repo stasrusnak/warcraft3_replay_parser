@@ -4,3 +4,4 @@ dist
 public
 .vscode
 node_modules
+config.json

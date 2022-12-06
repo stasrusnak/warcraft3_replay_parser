@@ -8,11 +8,8 @@ const file = fs.readFileSync(path.resolve(__dirname, './src/2222.w3g'));
 
 
 let asuna = new ReplayParser();
-
 const data = asuna.parseReplay(file);
-
 const aParser = new ActionParser();
-
 let actions =[]
 let tokens =[]
 let state = {};
