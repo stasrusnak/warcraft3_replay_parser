@@ -40,9 +40,13 @@ let state = {
     "2": "Zer0id228",
     "3": "humorist8",
     "4": "YooMaYoo",
+    "5": "romanuk2020",
+    "6": "BetterThatYou",
+    "7": "Alaster"
   },
   "leavers": {
-    "2": true
+    "2": true,
+    "7": true
   },
   "flags": {
     "0": "loser",
@@ -50,7 +54,14 @@ let state = {
     "2": "loser",
     "3": "loser",
     "4": "winner",
+    "5": "winner",
+    "6": "winner",
+    "7": "winner"
   }
+}
+
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
 }
 
 
@@ -100,44 +111,36 @@ mongoose.connect(config.mongo_url, {
           return pts
         }
 
-        function setPts() {
-          let pts = []
-          Object.keys(players).forEach((key) => {
-            if (players[key].nick === nick) pts = players[key].PTS
-          })
-          return pts
-        }
-
 
         //calc pts
         let wt = []
         let lt = []
         let winner = []
         let loser = []
+        let leavers = []
 
         for (let key in state.playerToName) {
           switch (state.flags[key]) {
             case "winner" :
               let plw = getPlayers(state.playerToName[key])
-              console.log(plw)
               winner.push({
-                'nick':plw.nick,
-                'PTS':plw.PTS
+                'nick': plw.nick,
+                'PTS': null,
+                'prevPTS': plw.PTS
               })
               wt.push(ranking.makePlayer(plw.PTS, 155, 0.05))
               break
             case "loser" :
               let pll = getPlayers(state.playerToName[key])
               loser.push({
-                'nick':pll.nick,
-                'PTS':pll.PTS
+                'nick': pll.nick,
+                'PTS': null,
+                'prevPTS': pll.PTS
               })
               lt.push(ranking.makePlayer(pll.PTS, 155, 0.05))
               break
           }
         }
-
-
         // team wt defeats team lt
         let matches = compositeOpponent(wt, lt, 1);
         ranking.updateRatings(matches);
@@ -148,22 +151,56 @@ mongoose.connect(config.mongo_url, {
         console.log(loser)
 
         //Доделать карты
+        console.log('winners')
+        // wt[0] ? console.log(winner[0].nick + '|' + Math.round(wt[0].getRating()) + '<-|' + winner[0].PTS) : 1
+        // wt[1] ? console.log(winner[1].nick + '|' + Math.round(wt[1].getRating()) + '<-|' + winner[1].PTS) : 1
+        // wt[2] ? console.log(winner[2].nick + '|' + Math.round(wt[2].getRating()) + '<-|' + winner[2].PTS) : 1
+        // wt[3] ? console.log(winner[3].nick + '|' + Math.round(wt[3].getRating()) + '<-|' + winner[3].PTS) : 1
+        wt[0] ? winner[0].PTS = Math.round(wt[0].getRating()) : 1
+        wt[1] ? winner[1].PTS = Math.round(wt[1].getRating()) : 1
+        wt[2] ? winner[2].PTS = Math.round(wt[2].getRating()) : 1
+        wt[3] ? winner[3].PTS = Math.round(wt[0].getRating()) : 1
+        console.log('losers')
+        // lt[0] ? console.log(loser[0].nick + '|' + Math.round(lt[0].getRating()) + '<-|' + loser[0].PTS) : 1
+        // lt[1] ? console.log(loser[1].nick + '|' + Math.round(lt[1].getRating()) + '<-|' + loser[1].PTS) : 1
+        // lt[2] ? console.log(loser[2].nick + '|' + Math.round(lt[2].getRating()) + '<-|' + loser[2].PTS) : 1
+        // lt[3] ? console.log(loser[3].nick + '|' + Math.round(lt[3].getRating()) + '<-|' + loser[3].PTS) : 1
+        lt[0] ? loser[0].PTS = Math.round(lt[0].getRating()) : 1
+        lt[1] ? loser[1].PTS = Math.round(lt[1].getRating()) : 1
+        lt[2] ? loser[2].PTS = Math.round(lt[2].getRating()) : 1
+        lt[3] ? loser[3].PTS = Math.round(lt[0].getRating()) : 1
 
-        wt[0] ?  console.log(winner[0].nick +'|'+Math.round(wt[0].getRating()) + '|'+winner[0].PTS )  : 1
-        wt[1] ?  console.log(winner[1].nick +'|'+Math.round(wt[1].getRating()) + '|'+winner[1].PTS )  : 1
-        wt[2] ?  console.log(winner[2].nick +'|'+Math.round(wt[2].getRating()) + '|'+winner[2].PTS )  : 1
-        wt[3] ?  console.log(winner[3].nick +'|'+Math.round(wt[3].getRating()) + '|'+winner[3].PTS )  : 1
 
-        lt[0] ?  console.log(loser[0].nick +'|'+Math.round(lt[0].getRating()) + '|'+loser[0].PTS )  : 1
-        lt[1] ?  console.log(loser[1].nick +'|'+Math.round(lt[1].getRating()) + '|'+loser[1].PTS )  : 1
-        lt[2] ?  console.log(loser[2].nick +'|'+Math.round(lt[2].getRating()) + '|'+loser[2].PTS )  : 1
-        lt[3] ?  console.log(loser[3].nick +'|'+Math.round(lt[3].getRating()) + '|'+loser[3].PTS )  : 1
+        for (let key in state.leavers) {
+          leavers.push(state.playerToName[key])
+        }
 
 
+
+
+        let data = {
+          idrep: li.idrep,
+          pars: 1,
+          winners: winner,
+          losers: loser,
+          leavers: leavers,
+          flags: state.flags,
+        }
+
+        // const map = new Maps(data)
+        // map.save()
+        //   .then(() => {
+        //     // li.pars = 1
+        //     // li.save()
+        //   })
+
+        console.log(players);
+        console.log("save new map data : ");
+
+        delay(5000)
 
         /*
         getReplays('https://replays.irinabot.ru/94545/' + li.link).then(async () => {
-
 
 
           // Object.keys(state.playerToName).forEach((key,index) => {
