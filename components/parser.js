@@ -33,36 +33,42 @@ function getTime(minutes){
   return times
 }
 
-let datePars = '2022-12-04'
+let datePars = '2022-12-17'
+
+
+const wait = ms => new Promise(res => setTimeout(res, ms))
+//
+// async function load () { // We need to wrap the loop into an async function for this to work
+//     await timer(3000); // then the created Promise can be awaited
+// }
+//
+// load();
 
 mongoose.connect(config.mongo_url, {
   useUnifiedTopology: true,
   useNewUrlParser: true
 
 })
-  .then(() => {
-
-    getReplays()
+  .then(async () => {
     console.log('mongodb connected!')
-    let linkBase = getLinks(datePars)
-    const Links = require('../models/links.model');
 
-    linkBase.forEach(item => {
+   if(getReplays()){
+     let linkBase = getLinks(datePars)
+     const Links = require('../models/links.model');
 
-      setTimeout(async function() {
+     for (const item of linkBase) {
 
-        let  resp = await Links.findOne({ idrep: item.idrep });
-
-        if (!resp) {
-          const link = new Links(item)
-          link.save()
-          console.log("save new rep link :"+ item.idrep);
-        }
-
-      }, 1000);
-
-    });
-
+       console.log(item)
+       let  resp = await Links.findOne({ idrep: item.idrep });
+       if (!resp) {
+         const link = new Links(item)
+         await link.save()
+         console.log("save new rep link :"+ item.idrep);
+       }
+       await wait(500);
+     }
+     console.log("done save links");
+   }
   })
   .catch(error => console.log('mongodb connected error! :' + error))
 
@@ -92,7 +98,9 @@ const getReplays = async () => {
         return console.log(err);
       }
       console.log("getReplays Done!");
+      return true
     });
+
 };
 
 
@@ -101,28 +109,32 @@ const getReplays = async () => {
 
 function getLinks(datePars){
   const file = fs.readFileSync(path.resolve(__dirname,'../src/site/site.html')).toString();
-  const links = file.match(/GHost(.*?x20.*?\.)w3g/gm);
-  let linkBase = []
-  links.forEach(i=>{
-    let re = decodeURIComponent(i)
-    let mapdate =  re.match(/GHost\+\+_(.*?)_/m);
-    if ( new Date(mapdate[1]) >= new Date(datePars)) {
-      let parsLink =  re.match(/GHost\+\+_(.*?)_Legion_TD_x20_-prccah_\+(.*?)_\((.*?)\)\.w3g/m);
-      if(parsLink){
-        parsLink[3] = parsLink[3].replace(/m/g, ':')
-        parsLink[3] = parsLink[3].replace(/s/g, '')
-        linkBase.push(
-          {
-            'date':parsLink[1],
-            'time':parsLink[3],
-            'idrep':parsLink[2],
-            'link':parsLink[0]
-          })
+
+  if (file){
+    const links = file.match(/GHost(.*?x20.*?\.)w3g/gm);
+    let linkBase = []
+    links.forEach(i=>{
+      let re = decodeURIComponent(i)
+      let mapdate =  re.match(/GHost\+\+_(.*?)_/m);
+      if ( new Date(mapdate[1]) >= new Date(datePars)) {
+        let parsLink =  re.match(/GHost\+\+_(.*?)_Legion_TD_x20_-prccah_\+(.*?)_\((.*?)\)\.w3g/m);
+        if(parsLink){
+          parsLink[3] = parsLink[3].replace(/m/g, ':')
+          parsLink[3] = parsLink[3].replace(/s/g, '')
+          linkBase.push(
+            {
+              'date':parsLink[1],
+              'time':parsLink[3],
+              'idrep':parsLink[2],
+              'link':parsLink[0]
+            })
+        }
       }
-    }
-  })
-  console.log("getLinks Done!");
-  return linkBase
+    })
+    console.log("getLinks Done!");
+    return linkBase
+  }
+
 }
 
 
