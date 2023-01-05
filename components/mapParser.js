@@ -72,9 +72,6 @@ mongoose.connect(config.mongo_url, {
     console.log("connect");
        asparsMapSetStats()
 
-
-
-
   })
   .catch(error => console.log('mongodb connected error! :' + error))
 
@@ -84,165 +81,173 @@ mongoose.connect(config.mongo_url, {
 
 async function asparsMapSetStats(){
 
-       let link = await links.find({pars: 0});
 
-       for (const l of link) {
+  do{
+    let link = await links.find({pars: 0});
 
-         let li = l
-         console.log(l.link)
-         state = await getReplays('https://replays.irinabot.ru/94545/'+l.link)
+    for (const l of link) {
 
-         console.log(state)
+      let li = l
+      console.log(l.link)
+      state = await getReplays('https://replays.irinabot.ru/94545/'+l.link)
 
-         if (li && state) {
-           let players = [];
-           for (let key in state.playerToName) {
-             let user = await User.findOne({nick: state.playerToName[key]});
-             if (!user) {
-               let user = new User({
-                 nick: state.playerToName[key],
-                 PTS: 1000,
-                 prevPTS: 1000,
-                 Games: 0,
-                 wins: 0,
-                 lose: 0,
-                 rmk: 0,
-                 leavers: 0,
-                 idreps: []
-               })
-               user.save().then(() => {
-                 console.log(state.playerToName[key] + ' create')
-               })
-               players.push(user)
-             } else {
-               players.push(user)
-             }
-           }
+      console.log(state)
 
-           function getPlayers(nick) {
-             let pts = []
-             Object.keys(players).forEach((key) => {
-               if (players[key].nick === nick) pts = players[key]
-             })
-             return pts
-           }
+      if (li && state) {
+        let players = [];
+        for (let key in state.playerToName) {
+          let user = await User.findOne({nick: state.playerToName[key]});
+          if (!user) {
+            let user = new User({
+              nick: state.playerToName[key],
+              PTS: 1000,
+              prevPTS: 1000,
+              Games: 0,
+              wins: 0,
+              lose: 0,
+              rmk: 0,
+              leavers: 0,
+              idreps: []
+            })
+            await user.save()
+              .then(() => {
+                console.log(state.playerToName[key] + ' create')
+              })
+            players.push(user)
+          } else {
+            players.push(user)
+          }
+        }
 
-           let wt = []
-           let lt = []
-           let winner = []
-           let loser = []
-           let leavers = []
-           let rmk = []
-           for (let key in state.playerToName) {
-             if (state.flags) {
-               switch (state.flags[key]) {
-                 case "winner" :
-                   let plw = getPlayers(state.playerToName[key])
-                   console.log(plw)
-                   winner.push({
-                     'nick': plw.nick,
-                     'PTS': 0,
-                     'prevPTS': plw.PTS
-                   })
-                   wt.push(ranking.makePlayer(plw.PTS, 300))
-                   break
-                 case "loser" :
-                   let pll = getPlayers(state.playerToName[key])
-                   console.log(pll)
-                   loser.push({
-                     'nick': pll.nick,
-                     'PTS': 0,
-                     'prevPTS': pll.PTS
-                   })
-                   lt.push(ranking.makePlayer(pll.PTS, 42))
-                   break
-               }
-             }else {
-               let plrmk = getPlayers(state.playerToName[key])
-               console.log(plrmk)
-               rmk.push({
-                 'nick': plrmk.nick,
-                 'PTS': plrmk.PTS,
-                 'prevPTS': plrmk.PTS
-               })
-             }
-           }
+        function getPlayers(nick) {
+          let pts = []
+          Object.keys(players).forEach((key) => {
+            if (players[key].nick === nick) pts = players[key]
+          })
+          return pts
+        }
 
-           if (state.flags) {
-             let matches = compositeOpponent(wt, lt, 1);
-             ranking.updateRatings(matches);
-             console.log('winners')
-             wt[0] ? winner[0].PTS = Math.round(wt[0].getRating()) : 1
-             wt[1] ? winner[1].PTS = Math.round(wt[1].getRating()) : 1
-             wt[2] ? winner[2].PTS = Math.round(wt[2].getRating()) : 1
-             wt[3] ? winner[3].PTS = Math.round(wt[3].getRating()) : 1
-             console.log('losers')
-             lt[0] ? loser[0].PTS = Math.round(lt[0].getRating()) : 1
-             lt[1] ? loser[1].PTS = Math.round(lt[1].getRating()) : 1
-             lt[2] ? loser[2].PTS = Math.round(lt[2].getRating()) : 1
-             lt[3] ? loser[3].PTS = Math.round(lt[3].getRating()) : 1
+        let wt = []
+        let lt = []
+        let winner = []
+        let loser = []
+        let leavers = []
+        let rmk = []
+        for (let key in state.playerToName) {
+          if (state.flags) {
+            switch (state.flags[key]) {
+              case "winner" :
+                let plw = getPlayers(state.playerToName[key])
+                console.log(plw)
+                winner.push({
+                  'nick': plw.nick,
+                  'PTS': 0,
+                  'prevPTS': plw.PTS
+                })
+                wt.push(ranking.makePlayer(plw.PTS, 300))
+                break
+              case "loser" :
+                let pll = getPlayers(state.playerToName[key])
+                console.log(pll)
+                loser.push({
+                  'nick': pll.nick,
+                  'PTS': 0,
+                  'prevPTS': pll.PTS
+                })
+                lt.push(ranking.makePlayer(pll.PTS, 42))
+                break
+            }
+          }else {
+            let plrmk = getPlayers(state.playerToName[key])
+            console.log(plrmk)
+            rmk.push({
+              'nick': plrmk.nick,
+              'PTS': plrmk.PTS,
+              'prevPTS': plrmk.PTS
+            })
+          }
+        }
 
-             for (let key in state.leavers) {
-               leavers.push(state.playerToName[key])
-             }
+        if (state.flags) {
+          let matches = compositeOpponent(wt, lt, 1);
+          ranking.updateRatings(matches);
+          console.log('winners')
+          wt[0] ? winner[0].PTS = Math.round(wt[0].getRating()) : 1
+          wt[1] ? winner[1].PTS = Math.round(wt[1].getRating()) : 1
+          wt[2] ? winner[2].PTS = Math.round(wt[2].getRating()) : 1
+          wt[3] ? winner[3].PTS = Math.round(wt[3].getRating()) : 1
+          console.log('losers')
+          lt[0] ? loser[0].PTS = Math.round(lt[0].getRating()) : 1
+          lt[1] ? loser[1].PTS = Math.round(lt[1].getRating()) : 1
+          lt[2] ? loser[2].PTS = Math.round(lt[2].getRating()) : 1
+          lt[3] ? loser[3].PTS = Math.round(lt[3].getRating()) : 1
 
-
-             for (const w of [...winner]) {
-               let pl = getPlayers(w.nick)
-               pl.PTS = w.PTS
-               pl.prevPTS = w.prevPTS
-               pl.Games = pl.Games + 1
-               pl.wins = pl.wins + 1
-               !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
-               leavers.includes(w.nick) ? pl.leavers = pl.leavers + 1 : 1
-               await pl.save()
-             }
-
-             for (const l of [...loser]) {
-               let pl = getPlayers(l.nick)
-               pl.PTS = l.PTS
-               pl.prevPTS = l.prevPTS
-               pl.Games = pl.Games + 1
-               pl.lose = pl.lose + 1
-               !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
-               leavers.includes(l.nick) ? pl.leavers = pl.leavers + 1 : 1
-               await pl.save()
-             }
-           }else {
-             for (const l of [...rmk]) {
-               let pl = getPlayers(l.nick)
-               pl.PTS = l.PTS
-               pl.prevPTS = l.PTS
-               pl.Games = pl.Games + 1
-               !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
-               await pl.save()
-             }
-           }
+          for (let key in state.leavers) {
+            leavers.push(state.playerToName[key])
+          }
 
 
-           let data = {
-             idrep: li.idrep,
-             link: l.link,
-             pars: 1,
-             winners: winner,
-             losers: loser,
-             leavers: leavers,
-             rmk: rmk,
-             flags: state.flags,
-           }
+          for (const w of [...winner]) {
+            let pl = getPlayers(w.nick)
+            pl.PTS = w.PTS
+            pl.prevPTS = w.prevPTS
+            pl.Games = pl.Games + 1
+            pl.wins = pl.wins + 1
+            !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
+            leavers.includes(w.nick) ? pl.leavers = pl.leavers + 1 : 1
+            await pl.save()
+          }
 
-           const map = new Maps(data)
-           await map.save()
-             .then(async () => {
-               li.pars = 1
-               await li.save()
-             })
-           console.log("save new map data : ");
+          for (const l of [...loser]) {
+            let pl = getPlayers(l.nick)
+            pl.PTS = l.PTS
+            pl.prevPTS = l.prevPTS
+            pl.Games = pl.Games + 1
+            pl.lose = pl.lose + 1
+            !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
+            leavers.includes(l.nick) ? pl.leavers = pl.leavers + 1 : 1
+            await pl.save()
+          }
+        }else {
+          for (const l of [...rmk]) {
+            let pl = getPlayers(l.nick)
+            pl.PTS = l.PTS
+            pl.prevPTS = l.PTS
+            pl.Games = pl.Games + 1
+            !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
+            await pl.save()
+          }
+        }
 
-         }
 
-        await wait(2000)
-       }
+        let data = {
+          idrep: li.idrep,
+          link: l.link,
+          pars: 1,
+          winners: winner,
+          losers: loser,
+          leavers: leavers,
+          rmk: rmk,
+          flags: state.flags,
+        }
+
+        const map = new Maps(data)
+        await map.save()
+          .then(async () => {
+            li.pars = 1
+            await li.save()
+          })
+        console.log("save new map data : ");
+
+      }
+
+      await wait(2000)
+    }
+
+    console.log('New task')
+    await wait(60000)
+  }while (1)
+
 
   return true
 }

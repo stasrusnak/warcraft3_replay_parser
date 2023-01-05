@@ -5,6 +5,10 @@ const path = require('path');
 const config = require('../config.json')
 const mongoose = require('mongoose');
 
+
+const wait = ms => new Promise(res => setTimeout(res, ms))
+
+
 function getTime(minutes){
   let times={}
   let date = new Date();
@@ -33,10 +37,11 @@ function getTime(minutes){
   return times
 }
 
-let datePars = '2022-12-17'
+let datePars = new Date().toJSON().slice(0, 10);
 
 
-const wait = ms => new Promise(res => setTimeout(res, ms))
+
+
 //
 // async function load () { // We need to wrap the loop into an async function for this to work
 //     await timer(3000); // then the created Promise can be awaited
@@ -52,23 +57,31 @@ mongoose.connect(config.mongo_url, {
   .then(async () => {
     console.log('mongodb connected!')
 
-   if(getReplays()){
-     let linkBase = getLinks(datePars)
-     const Links = require('../models/links.model');
 
-     for (const item of linkBase) {
+    do {
+      if(getReplays()){
+        let linkBase = getLinks(datePars)
+        const Links = require('../models/links.model');
 
-       console.log(item)
-       let  resp = await Links.findOne({ idrep: item.idrep });
-       if (!resp) {
-         const link = new Links(item)
-         await link.save()
-         console.log("save new rep link :"+ item.idrep);
-       }
-       await wait(500);
-     }
-     console.log("done save links");
-   }
+        for (const item of linkBase) {
+
+          console.log(item)
+          let  resp = await Links.findOne({ idrep: item.idrep });
+          if (!resp) {
+            const link = new Links(item)
+            await link.save()
+            console.log("save new rep link :"+ item.idrep);
+          }
+          await wait(500);
+        }
+        console.log("done save links");
+      }
+
+      console.log('New work')
+      await wait(50000)
+    }while (1)
+
+
   })
   .catch(error => console.log('mongodb connected error! :' + error))
 
