@@ -8,8 +8,7 @@ const fetch = (...args) =>
 const ReplayParser = require("@kokomi/w3g-parser").default
 const ActionParser = require("@kokomi/w3g-parser").ActionParser;
 
-const Maps = require('../models/map.model');
-const links = require('../models/links.model');
+const maps = require('../models/map.model');
 const User = require('../models/user.model');
 
 const compositeOpponent = require('glicko2-composite-opponent');
@@ -44,19 +43,6 @@ let state = {};
 //     "5": "romanuk2020",
 //     "6": "BetterThatYou",
 //     "7": "Alaster"
-//   },
-//   "leavers": {
-//     "2": true
-//   },
-//   "flags": {
-//     "0": "loser",
-//     "1": "loser",
-//     "2": "loser",
-//     "3": "loser",
-//     "4": "winner",
-//     "5": "winner",
-//     "6": "winner",
-//     "7": "winner"
 //   }
 // }
 
@@ -83,13 +69,18 @@ async function asparsMapSetStats(){
 
 
   do{
-    let link = await links.find({pars: 0});
+
+
+    let link = await maps.find({pars: 0});
+
 
     for (const l of link) {
 
       let li = l
       console.log(l.link)
       state = await getReplays('https://replays.irinabot.ru/94545/'+l.link)
+
+    // let li = 1
 
       console.log(state)
 
@@ -133,7 +124,9 @@ async function asparsMapSetStats(){
         let loser = []
         let leavers = []
         let rmk = []
+
         for (let key in state.playerToName) {
+
           if (state.flags) {
             switch (state.flags[key]) {
               case "winner" :
@@ -159,7 +152,6 @@ async function asparsMapSetStats(){
             }
           }else {
             let plrmk = getPlayers(state.playerToName[key])
-            console.log(plrmk)
             rmk.push({
               'nick': plrmk.nick,
               'PTS': plrmk.PTS,
@@ -193,7 +185,7 @@ async function asparsMapSetStats(){
             pl.prevPTS = w.prevPTS
             pl.Games = pl.Games + 1
             pl.wins = pl.wins + 1
-            !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
+            !pl.idreps.includes(li._id) ? pl.idreps = [...pl.idreps, li._id] : 1
             leavers.includes(w.nick) ? pl.leavers = pl.leavers + 1 : 1
             await pl.save()
           }
@@ -204,7 +196,7 @@ async function asparsMapSetStats(){
             pl.prevPTS = l.prevPTS
             pl.Games = pl.Games + 1
             pl.lose = pl.lose + 1
-            !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
+            !pl.idreps.includes(li._id) ? pl.idreps = [...pl.idreps, li._id] : 1
             leavers.includes(l.nick) ? pl.leavers = pl.leavers + 1 : 1
             await pl.save()
           }
@@ -214,7 +206,8 @@ async function asparsMapSetStats(){
             pl.PTS = l.PTS
             pl.prevPTS = l.PTS
             pl.Games = pl.Games + 1
-            !pl.idreps.includes(li.idrep) ? pl.idreps = [...pl.idreps, li.idrep] : 1
+            pl.rmk = pl.rmk + 1
+            !pl.idreps.includes(li._id) ? pl.idreps = [...pl.idreps, li._id] : 1
             await pl.save()
           }
         }
@@ -231,13 +224,13 @@ async function asparsMapSetStats(){
           flags: state.flags,
         }
 
-        const map = new Maps(data)
-        await map.save()
-          .then(async () => {
-            li.pars = 1
-            await li.save()
-          })
-        console.log("save new map data : ");
+        await maps.findOneAndUpdate(
+          {_id: li._id},
+          { $set: data }
+        ).then(async () => {
+          console.log("save new map data : ");
+        })
+
 
       }
 
@@ -245,7 +238,8 @@ async function asparsMapSetStats(){
     }
 
     console.log('New task')
-    await wait(60000)
+    await wait(2000)
+
   }while (1)
 
 
@@ -273,7 +267,7 @@ const getRawData = (URL) => {
 
 const getReplays = async (URL) => {
   let file = await getRawData(URL);
-  // const file = fs.readFileSync(path.resolve(__dirname, '../src/2222.w3g'));
+  // const file = fs.readFileSync(path.resolve(__dirname, '../src/rmk.w3g'));
 
 
   return getStats(file)
@@ -414,186 +408,3 @@ function getStats(file) {
 }
 
 
-/**********
-
- var compositeOpponent = require('glicko2-composite-opponent');
-
-
- getReplays('https://replays.irinabot.ru/94545/').then(() => {
-
-  for (let key in state.playerToName) {
-    let user = new User({
-      nick: state.playerToName[key],
-      PTS: 1000,
-      Games: 0,
-      wins: 0,
-      lose: 0,
-      leavers: 0,
-      date_insert: {},
-      idrep: {},
-    })
-
-    console.log(user)
-  }
-
-
-
-
-  let vt = []
-  let lt = []
-
-
-  for (let key in state.playerToName) {
-    switch (state.flags[key]) {
-      case "winner" :
-        console.log(state.playerToName[key])
-        vt.push(ranking.makePlayer(1400, 155, 0.05))
-        break
-      case "loser" :
-        console.log(state.playerToName[key])
-        lt.push(ranking.makePlayer(1100, 155, 0.05))
-        break
-    }
-  }
-
-  // team vt defeats team lt
-  let matches = compositeOpponent(vt, lt, 1);
-  ranking.updateRatings(matches);
-
-
-  console.log(lt[0].getRating())
-  console.log(lt[1].getRating())
-  console.log(lt[2].getRating())
-  console.log(lt[3].getRating())
-
-  console.log(vt[0].getRating())
-  console.log(vt[1].getRating())
-  console.log(vt[2].getRating())
-  console.log(vt[3].getRating())
-
- *************/
-
-/*
-  for (let key in state.playerToName) {
-
-
-    user['nick'] = state.playerToName[key]
-    console.log(key)
-    console.log(state.playerToName[key])
-    var pla = ranking.makePlayer();
-
-    if (state.flags){
-      switch (state.flags[key]) {
-        case "loser" :
-          user['loser'] = 1
-          user['prevPTS']= parseInt(pla.getRating())
-          matches.push([pla, pc, 0]);
-          ranking.updateRatings(matches);
-          user['PTS'] = parseInt(pla.getRating())
-          break
-        case "winner" :
-          user['winner'] = 1
-          user['prevPTS']= parseInt(pla.getRating())
-          matches.push([pla, pc, 1]);
-          ranking.updateRatings(matches);
-          user['PTS'] = parseInt(pla.getRating())
-          break
-      }
-    }else{
-      user['rmk'] = 1
-      user['prevPTS'] = parseInt(pla.getRating())
-      user['PTS'] = parseInt(pla.getRating())
-    }
-    if(state.leavers[key]) {
-      user['leaver'] = 1
-    }
-    user['Games']={idrep: 597,
-      'PTS': user['PTS'] ? user['PTS'] : pla.getRating(),
-      'prevPTS' : user['prevPTS'] ? user['prevPTS'] : pla.getRating()}
-    console.log(user)
-    user=[]
-    pla = []
-    ranking = []
-    matches = []
-
-  }
-*/
-
-// Object.keys(state.playerToName).forEach((key,index) => {
-//
-
-//
-// });
-
-
-// let user = {}
-//
-// console.log(state.playerToName.length)
-//
-// Object.keys(state.playerToName).forEach((key,index) => {
-//
-//   console.log(state.playerToName[key])
-//   user['nick'] = state.playerToName[key]
-//   user['index'] = index
-//   let pla = ranking.makePlayer();
-//
-//   if (state.flags){
-//     switch (state.flags[key]) {
-//       case "loser" :
-//         user['loser'] = 1
-//         user['prevPTS']= parseInt(pla.getRating())
-//         matches.push([pla, pc, 0]);
-//         ranking.updateRatings(matches);
-//         user['PTS'] = parseInt(pla.getRating())
-//         break
-//       case "winner" :
-//         user['winner'] = 1
-//         user['prevPTS']= parseInt(pla.getRating())
-//         matches.push([pla, pc, 1]);
-//         ranking.updateRatings(matches);
-//         user['PTS'] = parseInt(pla.getRating())
-//         break
-//     }
-//   }
-//   if(state.leavers) {
-//     user['leaver']
-//   }
-//
-//   user['Games']={idrep: li.idrep,
-//                   'PTS': user['PTS'] ? user['PTS'] : pla.getRating(),
-//                   'prevPTS' : user['prevPTS'] ? user['prevPTS'] : pla.getRating()}
-//   console.log(user)
-
-// });
-
-
-//
-// const user = new User({
-//   nick: state.playerToName[key],
-//   PTS: {},
-//   Games: {},
-//   winRate: {},
-//   wins: {},
-//   lose: {},
-//   date_insert: {},
-//   idrep: {},
-// })
-
-
-// let data = {
-//   idrep: li.idrep,
-//   pars: 1,
-//   players: state.playerToName,
-//   leavers: state.leavers,
-//   flags: state.flags,
-// }
-
-// const map = new Maps(data)
-// map.save()
-//   .then(()=>{
-//     li.pars = 1
-//     li.save()
-//   })
-//   console.log("save new map data : ");
-//
-// })

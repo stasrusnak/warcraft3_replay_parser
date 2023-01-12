@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require('path');
 const config = require('../config.json')
 const mongoose = require('mongoose');
+const maps = require('../models/map.model');
 
 
 const wait = ms => new Promise(res => setTimeout(res, ms))
@@ -37,6 +38,7 @@ function getTime(minutes){
   return times
 }
 
+// let datePars = '2023-01-10'
 let datePars = new Date().toJSON().slice(0, 10);
 
 
@@ -58,18 +60,19 @@ mongoose.connect(config.mongo_url, {
     console.log('mongodb connected!')
 
 
+
     do {
       if(getReplays()){
         let linkBase = getLinks(datePars)
-        const Links = require('../models/links.model');
 
         for (const item of linkBase) {
 
           console.log(item)
-          let  resp = await Links.findOne({ idrep: item.idrep });
+          let  resp = await maps.findOne({ idrep: item.idrep,
+                                            time: item.time});
           if (!resp) {
-            const link = new Links(item)
-            await link.save()
+            let Maps = new maps(item)
+            await Maps.save()
             console.log("save new rep link :"+ item.idrep);
           }
           await wait(500);
@@ -106,7 +109,7 @@ const URL = "https://replays.irinabot.ru/94545/";
 
 const getReplays = async () => {
     body = await getRawData(URL);
-    fs.writeFile(path.resolve(__dirname,'../src/site/site.html'), body, function(err) { // записываем файл путем вызова функции writeFile(название/путь к файлу, данные, функция-коллбек)
+    fs.writeFile(path.resolve(__dirname,'../src/site/site.html'), body, function(err) {
       if(err) { //если возникла ошибка, выводим ее в консоль
         return console.log(err);
       }

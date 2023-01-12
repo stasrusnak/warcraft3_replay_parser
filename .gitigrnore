@@ -5,3 +5,7 @@ public
 .vscode
 node_modules
 config.json
+
+/src/site
+/node_modules
+**/node_modules

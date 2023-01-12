@@ -7,6 +7,13 @@ const mapsSchema = new Schema({
     type: Number,
     default: 0
   },
+  time: {
+    type: String,
+    required: true
+  },
+  date: {
+    type: String,
+  },
   link: {
     type: String,
     default: ''
