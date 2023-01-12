@@ -195,9 +195,14 @@ async function asparsMapSetStats(){
             pl.PTS = l.PTS
             pl.prevPTS = l.prevPTS
             pl.Games = pl.Games + 1
-            pl.lose = pl.lose + 1
+
+            if(leavers.includes(l.nick) ){
+              pl.leavers = pl.leavers + 1
+            }else {
+              pl.lose = pl.lose + 1
+            }
+
             !pl.idreps.includes(li._id) ? pl.idreps = [...pl.idreps, li._id] : 1
-            leavers.includes(l.nick) ? pl.leavers = pl.leavers + 1 : 1
             await pl.save()
           }
         }else {
