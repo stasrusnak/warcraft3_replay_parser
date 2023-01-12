@@ -243,7 +243,7 @@ async function asparsMapSetStats(){
     }
 
     console.log('New task')
-    await wait(2000)
+    await wait(30000)
 
   }while (1)
 
