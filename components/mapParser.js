@@ -46,6 +46,64 @@ let state = {};
 //   }
 // }
 
+let nickBase = []
+const getClassColorByPlayer = (colour) => {
+  switch (colour) {
+    case 0:
+      return "red";
+    case 1:
+      return "blue";
+    case 2:
+      return "teal";
+    case 3:
+      return "purple";
+    case 4:
+      return "yellow";
+    case 5:
+      return "orange";
+    case 6:
+      return "green";
+    case 7:
+      return "pink";
+    case 8:
+      return "gray";
+    case 9:
+      return "light-blue";
+    case 10:
+      return "dark-green";
+    case 11:
+      return "brown";
+    case 12:
+      return "maroon";
+    case 13:
+      return "navy";
+    case 14:
+      return "turquoise";
+    case 15:
+      return "violet";
+    case 16:
+      return "wheat";
+    case 17:
+      return "peach";
+    case 18:
+      return "mint";
+    case 19:
+      return "leavender";
+    case 20:
+      return "coal";
+    case 21:
+      return "snow";
+    case 22:
+      return "emerald";
+    case 23:
+      return "peanut";
+    default:
+      return "";
+  }
+};
+
+
+
 const wait = ms => new Promise(res => setTimeout(res, ms))
 
 
@@ -71,18 +129,44 @@ async function asparsMapSetStats(){
   do{
 
 
-    let link = await maps.find({pars: 0});
+    let link = await maps.find({pars: 1});
 
 
     for (const l of link) {
 
       let li = l
       console.log(l.link)
-      state = await getReplays('https://replays.irinabot.ru/94545/'+l.link)
+      l.link = 'GHost++_2023-02-24_04-27_Legion_TD_x20_-prccah_+72_(18m06s).w3g1'
+      // state = await getReplays('https://replays.irinabot.ru/94545/'+l.link)
 
-    // let li = 1
 
-      console.log(state)
+
+      try {
+        state = await getReplays('https://replays.irinabot.ru/94545/' + l.link)
+        console.log(state)
+      } catch (e) {
+        let data = {
+          pars: 1,
+          errorType: 'ByteBuffer'
+        }
+        await maps.findOneAndUpdate(
+          {_id: li._id},
+          {$set: data}
+        ).then(async () => {
+          console.log("ByteBuffer pars:" + li._id);
+          logs.push("ByteBuffer players :" + li._id);
+        })
+        break
+      }
+
+
+
+
+      // let li = 1
+
+      // let len =  Object.keys(state.flags).length;
+      // console.log('state.flags.lenght')
+      // console.log(len)
 
       if (li && state) {
         let players = [];
@@ -97,6 +181,7 @@ async function asparsMapSetStats(){
               wins: 0,
               lose: 0,
               rmk: 0,
+              color: getClassColorByPlayer(key),
               leavers: 0,
               idreps: []
             })
@@ -131,7 +216,7 @@ async function asparsMapSetStats(){
             switch (state.flags[key]) {
               case "winner" :
                 let plw = getPlayers(state.playerToName[key])
-                console.log(plw)
+                // console.log(plw)
                 winner.push({
                   'nick': plw.nick,
                   'PTS': 0,
@@ -141,7 +226,7 @@ async function asparsMapSetStats(){
                 break
               case "loser" :
                 let pll = getPlayers(state.playerToName[key])
-                console.log(pll)
+                // console.log(pll)
                 loser.push({
                   'nick': pll.nick,
                   'PTS': 0,
@@ -192,7 +277,7 @@ async function asparsMapSetStats(){
 
           for (const l of [...loser]) {
             let pl = getPlayers(l.nick)
-            pl.PTS = l.PTS
+            l.PTS === 0 ? pl.PTS = pl.PTS - 27 :  pl.PTS = l.PTS
             pl.prevPTS = l.prevPTS
             pl.Games = pl.Games + 1
 
@@ -235,13 +320,14 @@ async function asparsMapSetStats(){
         ).then(async () => {
           console.log("save new map data : ");
         })
-
+        break
 
       }
 
       await wait(2000)
     }
 
+    break
     console.log('New task')
     await wait(30000)
 
@@ -268,15 +354,35 @@ const getRawData = (URL) => {
 
 
 // URL for data
-// const URL = "https://replays.irinabot.ru/94545/GHost++_2022-12-04_00-05_Legion_TD_x20_-prccah_+591_(45m52s).w3g";
+const URL = "https://replays.irinabot.ru/94545/GHost++_2022-12-04_00-05_Legion_TD_x20_-prccah_+591_(45m52s).w3g";
+const URLtext = "https://logs.irinabot.ru/94545/GHost++_2023-02-24_09-06_Legion_TD_x20_-prccah_+86_(06m41s).txt";
+
+// let countTry = 0
+// countTry++
+// countTry++
+// if ( countTry > 10){
+//   console.log('Cant get replay 10 try')
+//   return false
+// }
+//
+
+
 
 const getReplays = async (URL) => {
-  let file = await getRawData(URL);
-  // const file = fs.readFileSync(path.resolve(__dirname, '../src/rmk.w3g'));
+  let file  = await getRawData(URL);
+  // let file = fs.readFileSync(path.resolve(__dirname, '../src/396.w3g'));
+
+  if (file.byteLength < 10000) {
+    return false
+  }else {
+    return getStats(file)
+  }
 
 
-  return getStats(file)
 };
+
+
+
 
 function getStats(file) {
   let state = {};
@@ -316,7 +422,7 @@ function getStats(file) {
     if (token.length === 0) {
       throw new Error("Error tokenizing key [" + key + "], empty token found.");
     }
-
+``
     tokens.push(token);
 
     return tokens;
