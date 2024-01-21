@@ -1,3 +1,4 @@
 {
-  "mongo_url": "mongodb+srv://stasrusnak:00250025@cluster0.dpgqdkj.mongodb.net/WC3_STATS?retryWrites=true&w=majority"
+  "mongo_url": "mongodb://localhost:27017/WC3_STATS?retryWrites=true&w=majority",
+    "mongo_old": "mongodb+srv://stasrusnak:00250025@cluster0.dpgqdkj.mongodb.net/WC3_STATS?retryWrites=true&w=majority"
 }

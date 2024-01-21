@@ -16,7 +16,9 @@
     "express": "^4.18.2",
     "glicko2": "^1.1.0",
     "glicko2-composite-opponent": "^4.0.0",
+    "lighthouse": "^9.6.8",
     "mongoose": "^6.7.5",
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^3.3.0",
+    "playwright": "^1.41.0"
   }
 }

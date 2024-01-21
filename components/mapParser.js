@@ -31,20 +31,28 @@ var ranking = new glicko2.Glicko2(settings);
 var pc = ranking.makePlayer()
 var matches = [];
 
-let state = {};
+// let state = {};
 
-// let state = {
-//   "playerToName": {
-//     "0": "-HakypuJlo-",
-//     "1": "putch93",
-//     "2": "Zer0id228",
-//     "3": "humorist8",
-//     "4": "YooMaYoo",
-//     "5": "romanuk2020",
-//     "6": "BetterThatYou",
-//     "7": "Alaster"
-//   }
-// }
+let state = {
+  "playerToName": {
+    "0": "4eburek",
+    "1": "Maxous",
+    "2": "Just_a_tree",
+    "3": "STARAskola",
+    "4": "LolKekC4burek",
+    "5": "NERV",
+    "6": "[Uchiha]Tobi ",
+    "7": "MrEnemy"
+  },
+  "flags": {
+    "0": "winner",
+    "7": "loser"
+  },
+  "leavers": {
+    "4": true,
+    "7": true
+  }
+}
 
 let nickBase = []
 const getClassColorByPlayer = (colour) => {
@@ -103,9 +111,7 @@ const getClassColorByPlayer = (colour) => {
 };
 
 
-
 const wait = ms => new Promise(res => setTimeout(res, ms))
-
 
 
 mongoose.connect(config.mongo_url, {
@@ -114,35 +120,40 @@ mongoose.connect(config.mongo_url, {
 })
   .then(async () => {
     console.log("connect");
-       asparsMapSetStats()
+    asparsMapSetStats()
 
   })
   .catch(error => console.log('mongodb connected error! :' + error))
 
 
+async function asparsMapSetStats() {
 
 
-
-async function asparsMapSetStats(){
-
-
-  do{
+  do {
 
 
     let link = await maps.find({pars: 1});
-
 
     for (const l of link) {
 
       let li = l
       console.log(l.link)
-      l.link = 'GHost++_2023-02-24_04-27_Legion_TD_x20_-prccah_+72_(18m06s).w3g1'
+      l.link = 'GHost++_2023-06-01_04-02_Legion_TD_x20_-prccah_+389_(10m00s).w3g'
       // state = await getReplays('https://replays.irinabot.ru/94545/'+l.link)
 
 
-
+      //
       try {
+
+        if (l.link.indexOf('(00m00s)') !== -1){
+            console.log('00m00m')
+        }
+
         state = await getReplays('https://replays.irinabot.ru/94545/' + l.link)
+        if (!state){
+          console.log('Cant get replay')
+          break
+        }
         console.log(state)
       } catch (e) {
         let data = {
@@ -154,19 +165,70 @@ async function asparsMapSetStats(){
           {$set: data}
         ).then(async () => {
           console.log("ByteBuffer pars:" + li._id);
-          logs.push("ByteBuffer players :" + li._id);
         })
         break
+      }
+
+      if(state){
+        let countPlayers = Object.keys(state.playerToName).length;
+        if (countPlayers < 8) {
+          let data = {
+            pars: 1,
+            errorType: 'count players'
+          }
+          await maps.findOneAndUpdate(
+            {_id: li._id},
+            {$set: data}
+          ).then(async () => {
+            console.log("low count players :" + li._id);
+          })
+          break
+        }
+        let len = Object.keys(state.flags).length;
+        if (len < 8) {
+          console.log('битый')
+          let leftTeam = ['0','1','2','3']
+          let rightTeam = ['4','5','6','7']
+          for (let key in state.flags) {
+            if (state.flags[key] === 'winner') {
+              if (leftTeam.includes(key)) {
+                console.log('левые')
+                state.flags = {
+                  "0": "winner",
+                  "1": "winner",
+                  "2": "winner",
+                  "3": "winner",
+                  "4": "loser",
+                  "5": "loser",
+                  "6": "loser",
+                  "7": "loser"
+                }
+              } else if(rightTeam.includes(key)) {
+                console.log('правые')
+                state.flags = {
+                  "0": "loser",
+                  "1": "loser",
+                  "2": "loser",
+                  "3": "loser",
+                  "4": "winner",
+                  "5": "winner",
+                  "6": "winner",
+                  "7": "winner"
+                }
+              }
+              break
+            }
+          }
+
+          console.log(state)
+
+        }
+
       }
 
 
 
 
-      // let li = 1
-
-      // let len =  Object.keys(state.flags).length;
-      // console.log('state.flags.lenght')
-      // console.log(len)
 
       if (li && state) {
         let players = [];
@@ -235,7 +297,7 @@ async function asparsMapSetStats(){
                 lt.push(ranking.makePlayer(pll.PTS, 42))
                 break
             }
-          }else {
+          } else {
             let plrmk = getPlayers(state.playerToName[key])
             rmk.push({
               'nick': plrmk.nick,
@@ -277,20 +339,20 @@ async function asparsMapSetStats(){
 
           for (const l of [...loser]) {
             let pl = getPlayers(l.nick)
-            l.PTS === 0 ? pl.PTS = pl.PTS - 27 :  pl.PTS = l.PTS
+            l.PTS === 0 ? pl.PTS = pl.PTS - 27 : pl.PTS = l.PTS
             pl.prevPTS = l.prevPTS
             pl.Games = pl.Games + 1
 
-            if(leavers.includes(l.nick) ){
+            if (leavers.includes(l.nick)) {
               pl.leavers = pl.leavers + 1
-            }else {
+            } else {
               pl.lose = pl.lose + 1
             }
 
             !pl.idreps.includes(li._id) ? pl.idreps = [...pl.idreps, li._id] : 1
             await pl.save()
           }
-        }else {
+        } else {
           for (const l of [...rmk]) {
             let pl = getPlayers(l.nick)
             pl.PTS = l.PTS
@@ -316,7 +378,7 @@ async function asparsMapSetStats(){
 
         await maps.findOneAndUpdate(
           {_id: li._id},
-          { $set: data }
+          {$set: data}
         ).then(async () => {
           console.log("save new map data : ");
         })
@@ -331,14 +393,11 @@ async function asparsMapSetStats(){
     console.log('New task')
     await wait(30000)
 
-  }while (1)
+  } while (1)
 
 
   return true
 }
-
-
-
 
 
 const getRawData = (URL) => {
@@ -367,21 +426,18 @@ const URLtext = "https://logs.irinabot.ru/94545/GHost++_2023-02-24_09-06_Legion_
 //
 
 
-
 const getReplays = async (URL) => {
-  let file  = await getRawData(URL);
+  let file = await getRawData(URL);
   // let file = fs.readFileSync(path.resolve(__dirname, '../src/396.w3g'));
 
-  if (file.byteLength < 10000) {
+  console.log(file.byteLength)
+
+  if (file.byteLength < 500) {
     return false
-  }else {
+  } else {
     return getStats(file)
   }
-
-
 };
-
-
 
 
 function getStats(file) {
@@ -422,7 +478,7 @@ function getStats(file) {
     if (token.length === 0) {
       throw new Error("Error tokenizing key [" + key + "], empty token found.");
     }
-``
+    ``
     tokens.push(token);
 
     return tokens;
