@@ -33,16 +33,16 @@ var settings = {
 //---------------------------------------
 var r = new glicko2.Glicko2(settings);
 var a = [
-  r.makePlayer( 2500,350),
-  // r.makePlayer(1310,350),
-  // r.makePlayer(1253,350),
-  // r.makePlayer(980,350),
+  r.makePlayer( 1700,350),
+  r.makePlayer(1600,350),
+  r.makePlayer(1600,350),
+  r.makePlayer(1600,350),
 ];
 var b = [
-  r.makePlayer(	2500,	2500*settings.vol),
-  // r.makePlayer(1376,1376*settings.vol),
-  // r.makePlayer(1330,1330*settings.vol),
-  // r.makePlayer(1222,1222*settings.vol),
+  r.makePlayer(	1500,	1500*settings.vol),
+  r.makePlayer(1500,1500*settings.vol),
+  r.makePlayer(1500,1500*settings.vol),
+  r.makePlayer(1500,1500*settings.vol),
 ];
 
 // команда А побеждает команду Б
@@ -51,16 +51,16 @@ var matches = compositeOpponent(a,b, 1);
 r.updateRatings(matches);
 
 // Результат
-console.log(-2500+a[0].getRating() )
-// console.log(-1310+a[1].getRating())
-// console.log(-1253+a[2].getRating())
-// console.log(-980+a[3].getRating())
+console.log(-1700+a[0].getRating() )
+console.log(-1600+a[1].getRating())
+console.log(-1600+a[2].getRating())
+console.log(-1600+a[3].getRating())
 
 console.log('------------------')
-console.log(-2500+b[0].getRating())
-// console.log(-1376+b[1].getRating())
-// console.log(-1330+b[2].getRating())
-// console.log(-1222+b[3].getRating())
+console.log(-1500+b[0].getRating())
+console.log(-1500+b[1].getRating())
+console.log(-1500+b[2].getRating())
+console.log(-1500+b[3].getRating())
 
 
 
