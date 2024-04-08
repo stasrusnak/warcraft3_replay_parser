@@ -127,7 +127,7 @@ mongoose.connect(config.mongo_url, {
           if (!resp) {
             let chat = await getChat(item.link)
             // console.log(nickBase)
-            // console.log(chat)
+
 
             let val = {...item, 'chat': chat, 'players': nickBase,}
             if (chat) {
@@ -153,8 +153,8 @@ mongoose.connect(config.mongo_url, {
 const getChat = async (URL) => {
   nickBase = []
   countryBase = []
-  const URLtext = `https://logs.irinabot.ru/94545/${URL.slice(0, -4)}.txt`;
-  // const URLtext = `https://logs.irinabot.ru/94545/GHost++_2023-02-24_00-01_Legion_TD_x20_-prccah_+42_(64m14s).txt`;
+  // const URLtext = `https://logs.irinabot.ru/94545/${URL.slice(0, -4)}.txt`;
+  const URLtext = `https://logs.irinabot.ru/145882/GHost++_2024-01-21_01-37_Legion_TD_x20_NG_+1498_(28m14s).txt`;
   let response = await getRawDataLogs(URLtext);
   let text
   try {
@@ -309,6 +309,8 @@ const getChat = async (URL) => {
     }
   }
 
+  console.log('startLobby')
+  console.log(startLobby)
 
   return chat
 }

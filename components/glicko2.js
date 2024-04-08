@@ -18,7 +18,7 @@ var settings = {
   // Выше настроки стандарные
 
   tau:   0.5,
-  rating: 1000,
+  rating: 1200,
   rd:   250,
   vol:  0.065,
   //Тут я поправил немного дефольные настройки, чтоб так много не минусовало
@@ -65,10 +65,10 @@ console.log(-1500+b[3].getRating())
 
 
 
-// var r = new glicko2.Glicko2(settings);
-// var a = [
-//   r.makePlayer(1000,300),
-// ];
-// var b = [
-//   r.makePlayer(1000,42),
-// ];
+var r = new glicko2.Glicko2(settings);
+var a = [
+  r.makePlayer(1000,300),
+];
+var b = [
+  r.makePlayer(1000,42),
+];
