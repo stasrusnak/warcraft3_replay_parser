@@ -13,14 +13,11 @@ var settings = {
   // rd :  30,
   // //vol : Default volatility (expected fluctation on the player rating)
   // vol : 0.06
-
-
-  // Выше настроки стандарные
-
+ // Выше настроки стандарные
   tau:   0.5,
   rating: 1200,
   rd:   250,
-  vol:  0.065,
+  vol:  0.085,
   //Тут я поправил немного дефольные настройки, чтоб так много не минусовало
 };
 
